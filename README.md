@@ -108,13 +108,3 @@ Then open `http://localhost:5000` on your mobile browser with GPS enabled.
 - Personal fitness tracking
 
 ---
-
-## 📄 License
-
-MIT License
-
----
-
-## ✨ Author
-
-Made with ❤️ for prototyping GPS-based boundary mapping.
