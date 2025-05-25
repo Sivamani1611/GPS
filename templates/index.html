@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live GPS Boundary Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 90%; width: 100%; }
+    #controls { text-align: center; padding: 10px; }
+    button { padding: 10px 20px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="controls">
+    <button onclick="resetPath()">Reset</button>
+    <button onclick="downloadGeoJSON()">Download GeoJSON</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map = L.map('map').setView([0, 0], 18);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(map);
+
+    let path = [];
+    let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
+
+    function updatePosition(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const point = [lat, lng];
+
+      path.push(point);
+      polyline.setLatLngs(path);
+      map.setView(point, map.getZoom());
+
+      fetch("/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng })
+      });
+    }
+
+    function errorHandler(err) {
+      console.error("Location error:", err);
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(updatePosition, errorHandler, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000
+      });
+    } else {
+      alert("Geolocation not supported.");
+    }
+
+    function resetPath() {
+      path = [];
+      polyline.setLatLngs(path);
+      fetch("/reset", { method: "POST" });
+    }
+
+    function downloadGeoJSON() {
+      window.location.href = "/export";
+    }
+  </script>
+</body>
+</html>
